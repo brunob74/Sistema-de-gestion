@@ -1,12 +1,12 @@
 import sqlite3
 
-def consultar_stock(codigo_producto, talle):
-    con = sqlite3.connect("database/archie.db")
+def consultar_stock(codigo):
+    con = sqlite3.connect("database/tienda.db")
     cur = con.cursor()
     
     cur.execute("""
-        SELECT stock FROM Inventario WHERE codigo_producto = ? AND talle = ?
-    """, (codigo_producto, talle))
+        SELECT stock FROM Productos WHERE codigo = ?
+    """, (codigo,))
     
     resultado = cur.fetchone()
     
@@ -24,7 +24,15 @@ def consultar_stock(codigo_producto, talle):
     else:
         return "-1"
 
-
+def obtener_producto_para_venta(codigo):
+    con = sqlite3.connect("database/tienda.db")
+    cur = con.cursor()
+    cur.execute("""
+                SELECT nombre, precio_centavos, stock FROM Productos WHERE codigo = ?
+                """, (codigo,))
+    resultado = cur.fetchone()
+    con.close()
+    return resultado       # Devuelve (nombre, precio, stock) o None
 
 
 # --- ZONA DE PRUEBAS ---
@@ -32,14 +40,14 @@ def consultar_stock(codigo_producto, talle):
 if __name__ == "__main__":
     print("Probando RF-01: Consulta de Stock...")
     
-    stock_remera = consultar_stock(1001, 4)
-    if stock_remera == "-1" :
-        print("no hay unidades en stock del producto con el talle seleccionado")
+    stock = consultar_stock(1001)
+    if stock == "-1" :
+        print("no hay unidades en stock del producto seleccionado")
     else :
-        print(f"Hay {stock_remera} unidades en stock de la prenda 1001, talle 4")
+        print(f"Hay {stock} unidades en stock del producto 1001")
     
-    stock_falso = consultar_stock(1002, 22)
+    stock_falso = consultar_stock(1002)
     if stock_falso == "-1" :
-        print("no hay unidades en stock del producto con el talle seleccionado")
+        print("no hay unidades en stock del producto seleccionado")
     else:
-        print(f"Hay {stock_falso} unidades en stock de la prenda 1002, talle 22")
+        print(f"Hay {stock_falso} unidades en stock del producto 1002")

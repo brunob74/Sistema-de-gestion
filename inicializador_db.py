@@ -1,7 +1,7 @@
 import sqlite3
 def inicializar_base_de_datos():
     
-    con = sqlite3.connect("database/archie.db")
+    con = sqlite3.connect("database/tienda.db")
     cur = con.cursor()
     
     cur.execute("PRAGMA foreign_keys = ON;")
@@ -9,42 +9,27 @@ def inicializar_base_de_datos():
     cur.execute("""
         CREATE TABLE IF NOT EXISTS Productos (
             codigo INTEGER PRIMARY KEY,
-            nombre TEXT NOT NULL
-        ) STRICT        
-    """)
-    
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS Inventario (
-            id_inventario INTEGER PRIMARY KEY AUTOINCREMENT,
-            codigo_producto INTEGER NOT NULL,
-            talle INTEGER NOT NULL,
+            nombre TEXT NOT NULL,
+            categoria TEXT NOT NULL,
             precio_centavos INTEGER NOT NULL,
-            stock INTEGER NOT NULL CHECK(stock >0),
-            FOREIGN KEY (codigo_producto) REFERENCE Productos (codigo),
-        ) STRICT
+            stock INTEGER NOT NULL CHECK(stock >= 0)
+        )STRICT
     """)
     
     productos_prueba = [
-        (1001, "Remera Basica Algodon"),
-        (1002, "Pantalon Denim Clasico")
-    ]
-    cur.executemany("INSERT OR IGNORE INTO Productos (codigo, nombre) VALUES(?,?)", productos_prueba)
-    
-    inventario_prueba = [
-        (1001, 4, 550000, 10),
-        (1001, 6, 580000, 5),
-        (1002, 12, 1500000, 8),
-        (1002, 14, 1500000, 2)
+        (1001, "Martillo", "Ferreteria", 1000000, 10),
+        (1002,"Cuaderno" , "Libreria", 580000, 5),
+        (1003, "Heladera", "Electrodomesticos", 40000000, 8),
     ]
     cur.executemany("""
-        "INSERT INTO Inventario (codigo_producto, talle, precio_centavos, stock) 
-        VALUES(?,?,?,?)
-    """, inventario_prueba)
+        INSERT OR IGNORE INTO Productos(codigo, nombre, categoria, precio_centavos, stock) 
+        VALUES(?,?,?,?,?)
+    """, productos_prueba)
     
     con.commit()
     con.close()
     
-    print("¡Base de datos 'archie.db' actualizada!")
+    print("¡Base de datos 'tienda.db' actualizada!")
 
 if __name__ == "__main__":
     inicializar_base_de_datos()
