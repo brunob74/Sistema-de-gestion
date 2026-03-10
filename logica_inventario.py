@@ -11,12 +11,6 @@ def consultar_stock(codigo):
     
     resultado = cur.fetchone()
     
-    # fetchone(): Úsalo cuando buscas algo único (ej. el stock de un talle específico o el
-    # nombre de un cliente). Te devuelve (dato1, dato2)
-    
-    # fetchall() o iterar el cursor: Úsalo cuando buscas listas, reportes o inventarios
-    # completos. Te devuelve [ (dato1, dato2), (dato3, dato4) ]
-    
     
     con.close()
     
@@ -33,7 +27,7 @@ def obtener_producto_para_venta(codigo):
                 """, (codigo,))
     resultado = cur.fetchone()
     con.close()
-    return resultado       # Devuelve (nombre, precio, stock) o None
+    return resultado      
 
 def obtener_ventas_diarias():
     con = sqlite3.connect("database/tienda.db")
@@ -48,7 +42,7 @@ def obtener_ventas_diarias():
                         WHERE fecha_venta LIKE ?
                         ORDER BY fecha_venta DESC
         """, (busqueda_fecha,))
-        ventas = cur.fetchall()  # Devuelve una lista de tuplas con los datos de las ventas
+        ventas = cur.fetchall() 
         return ventas
     except Exception as e:
         print(f"Error al obtener las ventas diarias: {e}")
@@ -66,7 +60,7 @@ def obtener_ventas_historico():
                         FROM Ventas
                         ORDER BY fecha_venta DESC
         """)
-        ventas = cur.fetchall()  # Devuelve una lista de tuplas con los datos de las ventas
+        ventas = cur.fetchall() 
         return ventas
     except Exception as e:
         print(f"Error al obtener las ventas diarias: {e}")
@@ -81,7 +75,6 @@ def registrar_venta(codigo, cantidad, cliente, nombre_producto, total):
     cur = con.cursor()
     
     try:
-        # Primero verificamos el stock actual
         cur.execute("""
             SELECT stock FROM Productos WHERE codigo = ?
         """, (codigo,))
@@ -105,13 +98,13 @@ def registrar_venta(codigo, cantidad, cliente, nombre_producto, total):
                 
                 con.commit()
                 con.close()
-                return True  # Venta registrada exitosamente
+                return True 
             else:
                 con.close()
-                return False  # No hay suficiente stock
+                return False 
         else:
             con.close()
-            return False  # Producto no encontrado
+            return False
     except Exception as e:
         print(f"Error al registrar la venta: {e}")
         con.rollback()
@@ -124,17 +117,13 @@ def anular_venta(id_venta):
     cur = con.cursor()
     
     try:
-        # 1. Buscamos los datos de la venta antes de borrarla
         cur.execute("SELECT codigo_producto, cantidad FROM Ventas WHERE id = ?", (id_venta,))
         venta = cur.fetchone()
         
         if venta:
             codigo_prod, cantidad_vendida = venta
-            
-            # 2. Devolvemos el stock (usamos stock + ? para ser más directos)
             cur.execute("UPDATE Productos SET stock = stock + ? WHERE codigo = ?", (cantidad_vendida, codigo_prod))
             
-            # 3. Borramos el registro
             cur.execute("DELETE FROM Ventas WHERE id = ?", (id_venta,))
             
             con.commit()
