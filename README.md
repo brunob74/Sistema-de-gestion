@@ -23,16 +23,19 @@ Una aplicación de escritorio robusta y escalable desarrollada en Python para au
 ## Instalación y Uso
 
 1. Clonar el repositorio:
-   ```bash
-   git clone [https://github.com/brunob74/Sistema-de-gestion.git](https://github.com/brunob74/Sistema-de-gestion.git)
+    ```bash
+    git clone [https://github.com/brunob74/Sistema-de-gestion.git](https://github.com/brunob74/Sistema-de-gestion.git)
 
 2. Instalar dependencias:
+    ```bash
     pip install customtkinter pandas
 
 3. Inicializar la base de datos (creará las tablas estructurales y un set de datos de prueba):
+    ```bash
     python inicializador_db.py
 
 4. Ejecutar la aplicación principal:
+    ```bash
     python main.py
 
 
