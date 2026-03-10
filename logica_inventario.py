@@ -1,4 +1,5 @@
 import sqlite3
+import datetime
 
 def consultar_stock(codigo):
     con = sqlite3.connect("database/tienda.db")
@@ -34,6 +35,118 @@ def obtener_producto_para_venta(codigo):
     con.close()
     return resultado       # Devuelve (nombre, precio, stock) o None
 
+def obtener_ventas_diarias():
+    con = sqlite3.connect("database/tienda.db")
+    cur = con.cursor()
+    
+    try:
+        fecha_hoy = datetime.date.today().strftime("%d-%m-%Y")
+        busqueda_fecha = f"{fecha_hoy}%"
+        cur.execute("""
+                        SELECT id, fecha_venta, cliente, codigo_producto, nombre_producto, cantidad, total 
+                        FROM Ventas
+                        WHERE fecha_venta LIKE ?
+                        ORDER BY fecha_venta DESC
+        """, (busqueda_fecha,))
+        ventas = cur.fetchall()  # Devuelve una lista de tuplas con los datos de las ventas
+        return ventas
+    except Exception as e:
+        print(f"Error al obtener las ventas diarias: {e}")
+        return []
+    finally:
+        con.close()
+
+def obtener_ventas_historico():
+    con = sqlite3.connect("database/tienda.db")
+    cur = con.cursor()
+    
+    try:
+        cur.execute("""
+                        SELECT id, fecha_venta, cliente, codigo_producto, nombre_producto, cantidad, total 
+                        FROM Ventas
+                        ORDER BY fecha_venta DESC
+        """)
+        ventas = cur.fetchall()  # Devuelve una lista de tuplas con los datos de las ventas
+        return ventas
+    except Exception as e:
+        print(f"Error al obtener las ventas diarias: {e}")
+        return []
+    finally:
+        con.close()
+
+
+
+def registrar_venta(codigo, cantidad, cliente, nombre_producto, total):
+    con = sqlite3.connect("database/tienda.db")
+    cur = con.cursor()
+    
+    try:
+        # Primero verificamos el stock actual
+        cur.execute("""
+            SELECT stock FROM Productos WHERE codigo = ?
+        """, (codigo,))
+        
+        resultado = cur.fetchone()
+        
+        if resultado is not None:
+            stock_actual = resultado[0]
+            if stock_actual >= cantidad:
+                nuevo_stock = stock_actual - cantidad
+                cur.execute("""
+                    UPDATE Productos SET stock = ? WHERE codigo = ?
+                """, (nuevo_stock, codigo))
+                
+                hora_exacta = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+                cur.execute("""
+                    INSERT INTO Ventas(fecha_venta, cliente, codigo_producto, nombre_producto, cantidad, total)
+                    VALUES(?, ?, ?, ?, ?, ?)
+                """, (hora_exacta, cliente, codigo, nombre_producto, cantidad, total))
+                
+                
+                con.commit()
+                con.close()
+                return True  # Venta registrada exitosamente
+            else:
+                con.close()
+                return False  # No hay suficiente stock
+        else:
+            con.close()
+            return False  # Producto no encontrado
+    except Exception as e:
+        print(f"Error al registrar la venta: {e}")
+        con.rollback()
+        return False
+    finally:
+        con.close()
+
+def anular_venta(id_venta):
+    con = sqlite3.connect("database/tienda.db")
+    cur = con.cursor()
+    
+    try:
+        # 1. Buscamos los datos de la venta antes de borrarla
+        cur.execute("SELECT codigo_producto, cantidad FROM Ventas WHERE id = ?", (id_venta,))
+        venta = cur.fetchone()
+        
+        if venta:
+            codigo_prod, cantidad_vendida = venta
+            
+            # 2. Devolvemos el stock (usamos stock + ? para ser más directos)
+            cur.execute("UPDATE Productos SET stock = stock + ? WHERE codigo = ?", (cantidad_vendida, codigo_prod))
+            
+            # 3. Borramos el registro
+            cur.execute("DELETE FROM Ventas WHERE id = ?", (id_venta,))
+            
+            con.commit()
+            return True
+        return False
+        
+    except Exception as e:
+        print(f"ERROR CRÍTICO AL ANULAR: {e}")
+        con.rollback()
+        return False
+    finally:
+        con.close()
 
 # --- ZONA DE PRUEBAS ---
 # Usamos el truco para probar la funcion aca.
